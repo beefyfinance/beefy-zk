@@ -4,8 +4,8 @@ async function main() {
     await hardhat.run("compile");
   
     await hardhat.run("verify:verify", {
-      address: "0x3f02b129138377722FfE9d374B3F65fc7599475e",
-      constructorArguments: ["0x46dbd39e26a56778d88507d7aEC6967108C0BD36","0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91"],
+      address: "0x1E2D6370Ae2c466749EA710Ba90a22744CEbd697",
+      constructorArguments: [21600, ["0xdAec0E93A98b6184816dFDA318B1A01EAF026164"],["0xdAec0E93A98b6184816dFDA318B1A01EAF026164","0x4fED5491693007f0CD49f4614FFC38Ab6A04B619"],"0x0000000000000000000000000000000000000000"],
     });
   
   }

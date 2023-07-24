@@ -36,12 +36,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const deployer = new Deployer(hre, wallet);
 
  // const vault = await deployer.loadArtifact("BeefyVaultV7");
-  const artifact = await deployer.loadArtifact("BeefyUniV2ZapSolidly");
+  const artifact = await deployer.loadArtifact("BeefyBoost");
 
 //  const beefyVault = await deployer.deploy(vault, []);
 //  await beefyVault.deployed();
 
-  const contract = await deployer.deploy(artifact, [velocore.router, ETH]);
+  const contract = await deployer.deploy(artifact, []);
 
   await contract.deployed();
  // await contract.renounceRole(TIMELOCK_ADMIN_ROLE, deployer.ethWallet.address);

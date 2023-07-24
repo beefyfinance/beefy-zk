@@ -19,17 +19,18 @@ const {
     USDC: { address: USDC },
     BUSD: {address: BUSD},
     ETH: {address: ETH},
+    BIFI: { address: BIFI }
   },
 } = addressBook.zksync;
 
 
-const want = ethers.utils.getAddress("0x80aB452b8Ba46722029a69308aC52c0897d3a855");
-const gauge = ethers.utils.getAddress("0xCB6ad4A0c25bDdAd2E99EE51Fe468b6CDB4B2576");
+const want = ethers.utils.getAddress("0x487b6645068E49Ad8cA8c082327DaB1F4Dc2ECbf");
+const gauge = ethers.utils.getAddress("0x7355D3FC69a9824EBDF6C29Dd9298899e495d941");
 //const ensId = ethers.utils.formatBytes32String("cake.eth");
 
 const vaultParams = {
-  mooName: "Moo Velocore VC-ETH",
-  mooSymbol: "mooVelocoreVC-ETH",
+  mooName: "Moo Velocore BIFI-ETH",
+  mooSymbol: "mooVelocoreBIFI-ETH",
   delay: 21600,
 };
 
@@ -42,8 +43,8 @@ const strategyParams = {
   beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   feeConfig: beefyfinance.beefyFeeConfig,
   outputToNativeRoute: [[VC, ETH, false]],
-  outputToLp0Route: [[VC, ETH, false]],
-  outputToLp1Route: [[VC, VC, false]],
+  outputToLp0Route: [[VC, ETH, false],[ETH, BIFI, false]],
+  outputToLp1Route: [[VC, ETH, false]],
   verifyStrat: false,
   spiritswapStrat: false,
   gaugeStakerStrat: false,
