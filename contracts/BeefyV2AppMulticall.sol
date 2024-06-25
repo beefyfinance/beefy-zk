@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at Etherscan.io on 2022-11-04
-*/
-
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.4;
@@ -22,6 +18,11 @@ interface IBeefyVault {
     function strategy() external view returns (IBeefyStrategy);
 }
 
+interface IBeefyCowVault {
+    function balances() external view returns (uint256, uint256);
+    function strategy() external view returns (IBeefyStrategy);
+}
+
 interface IBeefyBoost {
     function totalSupply() external view returns (uint256);
     function periodFinish() external view returns (uint256);
@@ -29,6 +30,11 @@ interface IBeefyBoost {
     function balanceOf(address) external view returns (uint256);
     function earned(address) external view returns (uint256);
     function isPreStake() external view returns (bool);
+}
+
+interface IBeefyBoostV2 {
+    function balanceOf(address) external view returns (uint256);
+    function earned(address) external view returns (address[] memory, uint256[] memory);
 }
 
 struct BoostInfo {
@@ -45,6 +51,13 @@ struct VaultInfo {
     bool paused;
 }
 
+struct CowVaultInfo {
+    uint256 token0Balance;
+    uint256 token1Balance;
+    address strategy;
+    bool paused;
+}
+
 struct GovVaultInfo {
     uint256 totalSupply;
 }
@@ -57,6 +70,12 @@ struct GovVaultBalanceInfo {
 struct BoostBalanceInfo {
     uint256 balance;
     uint256 rewards;
+}
+
+struct BoostBalanceInfoV2 {
+    uint256 balance;
+    address[] rewardTokens;
+    uint256[] rewards;
 }
 
 struct AllowanceInfo {
@@ -88,6 +107,30 @@ contract BeefyV2AppMulticall {
         return results;
     }
 
+    function getCowVaultInfo(address[] calldata vaults) external view returns (CowVaultInfo[] memory) {
+        CowVaultInfo[] memory results = new CowVaultInfo[](vaults.length);
+
+        for (uint i = 0; i < vaults.length; i++) {
+            IBeefyCowVault vault = IBeefyCowVault(vaults[i]);
+            IBeefyStrategy strat = vault.strategy();
+            bool paused;
+            try strat.paused() returns (bool _paused) {
+                paused = _paused;
+            } catch { 
+                paused = false; 
+            }
+            (uint256 balance0, uint256 balance1) = vault.balances();
+            results[i] = CowVaultInfo(
+                balance0,
+                balance1,
+                address(strat),
+                paused
+            );
+        }
+
+        return results;
+    }
+
     function getBoostInfo(address[] calldata boosts) external view returns (BoostInfo[] memory) {
         BoostInfo[] memory results = new BoostInfo[](boosts.length);
 
@@ -105,6 +148,21 @@ contract BeefyV2AppMulticall {
                 boost.rewardRate(),
                 periodFinish,
                 isPreStake
+            );
+        }
+
+        return results;
+    }
+
+    function getGovVaultMultiBalance(address[] calldata vaults, address owner) external view returns (BoostBalanceInfoV2[] memory) {
+        BoostBalanceInfoV2[] memory results = new BoostBalanceInfoV2[](vaults.length);
+        for (uint i; i < vaults.length; i++) {
+            IBeefyBoostV2 boost = IBeefyBoostV2(vaults[i]);
+            (address[] memory rewardTokens, uint256[] memory rewards) = boost.earned(owner);
+            results[i] = BoostBalanceInfoV2(
+                boost.balanceOf(owner),
+                rewardTokens,
+                rewards
             );
         }
 

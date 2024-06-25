@@ -10,9 +10,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const {
-  platforms: { velocore, beefyfinance },
+  platforms: { beefyfinance },
   tokens: {
-    VC: {address: VC},
     USDC: { address: USDC },
     BUSD: {address: BUSD},
     ETH: {address: ETH},
@@ -36,7 +35,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const deployer = new Deployer(hre, wallet);
 
  // const vault = await deployer.loadArtifact("BeefyVaultV7");
-  const artifact = await deployer.loadArtifact("BeefyBoost");
+  const artifact = await deployer.loadArtifact("BeefyVaultConcLiqFactory");
 
 //  const beefyVault = await deployer.deploy(vault, []);
 //  await beefyVault.deployed();
@@ -48,6 +47,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
  await hardhat.run("verify:verify", {
   address: contract.address,
+  contract: "contracts/vault/BeefyVaultConcLiqFactory.sol:BeefyVaultConcLiqFactory",
   constructorArguments: [],
 });
 
