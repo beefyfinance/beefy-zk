@@ -19,7 +19,7 @@
     "@openzeppelin-4/contracts": "npm:@openzeppelin/contracts",
     "@openzeppelin/contracts": "^4.9.0",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
-    "blockchain-addressbook": "0.46.163",
+    "blockchain-addressbook": "0.46.177",
     "dotenv": "^16.0.3",
     "hardhat": "^2.22.5",
     "solidity-bytes-utils": "0.8.0",

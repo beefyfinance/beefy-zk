@@ -65,8 +65,8 @@ contract BeefyRewardPool is ERC20Upgradeable, OwnableUpgradeable {
     event AddReward(address reward);
     /// @notice More of an existing reward has been added to be distributed
     event NotifyReward(address indexed reward, uint256 amount, uint256 duration);
-    /// @notice A reward has been removed from distribution and sent to the recipient
-    event RemoveReward(address reward, address recipient);
+    /// @notice A reward has been removed from distribution
+    event RemoveReward(address reward);
     /// @notice The owner has removed tokens that are not supported by this contract
     event RescueTokens(address token, address recipient);
     /// @notice An address has been added to or removed from the whitelist
@@ -190,6 +190,12 @@ contract BeefyRewardPool is ERC20Upgradeable, OwnableUpgradeable {
         earnedAmount = _earned(_user, _reward);
     }
 
+    /// @notice View the reward array length
+    /// @return length Number of reward tokens
+    function rewardsLength() external view returns (uint256 length) {
+        length = rewards.length;
+    }
+
     /// @notice View the reward information
     /// @dev The active reward information is automatically selected from the id mapping
     /// @param _rewardId Index of the reward in the array to get the information for
@@ -289,8 +295,7 @@ contract BeefyRewardPool is ERC20Upgradeable, OwnableUpgradeable {
     /// @dev All unclaimed earnings are ignored. Re-adding the reward will have a new set of
     /// reward information so any unclaimed earnings cannot be recovered
     /// @param _reward Address of the reward to be removed
-    /// @param _recipient Address of the recipient that the removed reward was sent to
-    function removeReward(address _reward, address _recipient) external onlyOwner {
+    function removeReward(address _reward) external onlyOwner {
         if (!_rewardExists(_reward)) revert RewardNotFound(_reward);
 
         uint256 replacedIndex = _index[_reward];
@@ -299,10 +304,7 @@ contract BeefyRewardPool is ERC20Upgradeable, OwnableUpgradeable {
         _index[endToken] = replacedIndex;
         rewards.pop();
 
-        uint256 rewardBal = IERC20Upgradeable(_reward).balanceOf(address(this));
-        IERC20Upgradeable(_reward).safeTransfer(_recipient, rewardBal);
-
-        emit RemoveReward(_reward, _recipient);
+        emit RemoveReward(_reward);
     }
 
     /// @notice Owner function to remove unsupported tokens sent to this contract
