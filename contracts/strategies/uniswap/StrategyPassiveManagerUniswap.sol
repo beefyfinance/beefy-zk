@@ -80,6 +80,9 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     /// @notice Initializes the ticks on first deposit. 
     bool private initTicks;
 
+    /// @notice The timestamp of the last deposit
+    uint256 private lastDeposit;
+
     // Errors 
     error NotAuthorized();
     error NotPool();
@@ -89,6 +92,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     error InvalidOutput();
     error NotCalm();
     error TooMuchSlippage();
+    error InvalidTicks();
 
     // Events
     event TVL(uint256 bal0, uint256 bal1);
@@ -132,7 +136,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
         int56 maxCalmTick = int56(SignedMath.min(twapTick + maxTickDeviation, MAX_TICK));
 
         // Calculate if greater than deviation % from twap and revert if it is. 
-        if(minCalmTick > tick  || maxCalmTick < tick) return false;
+        if (minCalmTick > tick || maxCalmTick < tick) return false;
         else return true;
     }
 
@@ -146,7 +150,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
      * @param _lpToken1ToNativePath The bytes path for swapping the second token to the native token.
      * @param _commonAddresses The common addresses needed for the strat fee manager.
      */
-    function initialize (
+    function initialize(
         address _pool,
         address _quoter, 
         int24 _positionWidth,
@@ -175,7 +179,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     }
 
     /// @notice Only allows the vault to call a function.
-    function _onlyVault () private view {
+    function _onlyVault() private view {
         if (msg.sender != vault) revert NotVault();
     }
 
@@ -200,6 +204,8 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
         
         (uint256 bal0, uint256 bal1) = balances();
 
+        lastDeposit = block.timestamp;
+
         // TVL Balances after deposit
         emit TVL(bal0, bal1);
     }
@@ -211,6 +217,8 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
      */
     function withdraw(uint256 _amount0, uint256 _amount1) external {
         _onlyVault();
+
+        if (block.timestamp == lastDeposit) _onlyCalmPeriods();
 
         // Liquidity has already been removed in beforeAction() so this is just a simple withdraw.
         if (_amount0 > 0) IERC20Metadata(lpToken0).safeTransfer(vault, _amount0);
@@ -226,7 +234,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     }
 
     /// @notice Adds liquidity to the main and alternative positions called on deposit, harvest and withdraw.
-    function _addLiquidity() private {
+    function _addLiquidity() private onlyCalmPeriods {
         _whenStrategyNotPaused();
 
         (uint256 bal0, uint256 bal1) = balancesOfThis();
@@ -247,7 +255,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
         if (liquidity > 0 && amountsOk) {
             minting = true;
             IUniswapV3Pool(pool).mint(address(this), positionMain.tickLower, positionMain.tickUpper, liquidity, "Beefy Main");
-        }
+        } else _onlyCalmPeriods();
 
         (bal0, bal1) = balancesOfThis();
 
@@ -321,7 +329,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     }
 
     /// @notice Internal function to claim fees from the pool, charge fees for Beefy, then readjust our positions.
-    function _harvest (address _callFeeRecipient) private {
+    function _harvest(address _callFeeRecipient) private onlyCalmPeriods {
         // Claim fees from the pool and collect them.
         _claimEarnings();
         _removeLiquidity();
@@ -563,7 +571,7 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
     }
 
     /**
-     * @notice The current price of the pool in token1, encoded with 36 decimals.
+     * @notice The current price of the pool in token1, encoded with `36 + lpToken1.decimals - lpToken0.decimals`.
      * @return _price The current price of the pool.
     */
     function price() public view returns (uint256 _price) {
@@ -668,6 +676,8 @@ contract StrategyPassiveManagerUniswap is StratFeeManagerInitializable, IStrateg
                 distance
             ); 
         }
+
+        if (positionMain.tickLower == positionAlt.tickLower && positionMain.tickUpper == positionAlt.tickUpper) revert InvalidTicks();
     }
 
     /**
