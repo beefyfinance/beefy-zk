@@ -39,6 +39,16 @@ module.exports = {
       zksync: process.env.ZKSYNC_API_KEY!,
     }
   },
+  customChains: [
+    {
+      network: "zksync",
+      chainId: 324,
+      urls: {
+        apiURL: "https://api-era.zksync.network/api",
+        browserURL: "https://era.zksync.network/",
+      },
+    },
+  ],
   defaultNetwork: "zksync", // optional (if not set, use '--network zkTestnet')
   solidity: {
     compilers: [

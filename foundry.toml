@@ -1,0 +1,15 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["node_modules", "lib"]
+remappings = [
+    "@openzeppelin-4/=node_modules/@openzeppelin-4/",
+    "@openzeppelin/=node_modules/@openzeppelin/",
+    "hardhat/=node_modules/hardhat/",
+    "solidity-bytes-utils/=node_modules/solidity-bytes-utils/",
+]
+
+[rpc_endpoints]
+zksync = "https://mainnet.era.zksync.io"
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
